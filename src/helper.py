@@ -89,7 +89,7 @@ class Solution:
     plt.figure(figsize=(10, 6))
     plt.plot(n_values, avg_proposals, 'o-', linewidth=2, label='Calculated Average (5 samples)')
     
-    # Add theoretical n ln n curve
+    # Add the number of expected proposals, by Pitman in Theorem 2, n ln n curve
     x = np.array(n_values)
     plt.plot(x, x * np.log(x), '--', label='n ln n')
     
@@ -100,7 +100,7 @@ class Solution:
     plt.legend()
   
     
-    # Add annotation about the asymptotic behavior
+    # Add annotation about the asymptotic behavior as n gets large
     plt.figtext(0.5, 0.01, 
                 "The number of proposals is asymptotic to n ln n as shown in Pittel's paper",
                 ha='center', fontsize=10)
@@ -143,7 +143,7 @@ class Solution:
 
     return proposals
   
-    # Modify the run_da function to return ranks
+  # Modify the run_da function for problem 3 to return ranks
   def run_da2(self, n):
       def generate_random_preferences(k):
           doctors_preferences = [random.sample(range(k), k) for _ in range(k)]
