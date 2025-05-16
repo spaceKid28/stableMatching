@@ -115,10 +115,7 @@ class Solution:
 
     # Collect the total number of proposals for each instance
     proposals = []
-    x =0
     for _ in range(num_instances):
-        print(x)
-        x += 1
         total_proposals = self.run_da(n)
         proposals.append(total_proposals)
 
