@@ -64,10 +64,7 @@ class Solution:
   # Count the number of proposals for doctor-hospitals sizes n = 10, 50, 100, 500, 10000
   # For each 
   def plot_proposals_vs_n(self):
-    """
-    Plot the average number of proposals as a function of n,
-    using 5 runs for each of 5 well-spread values of n.
-    """
+
     import matplotlib.pyplot as plt
     import numpy as np
     
@@ -110,21 +107,11 @@ class Solution:
     
     plt.tight_layout()
     plt.savefig('proposals_vs_n.png')
-    plt.show()
+
     
     return n_values, avg_proposals
   
-  def plot_proposals_distribution(self, n = 500, num_instances=100):
-    """
-    Plot the distribution of the total number of proposals for a fixed value of n
-    over several input instances.
-    
-    Parameters:
-    - n: The fixed number of doctors and hospitals.
-    - num_instances: The number of input instances to run the DA algorithm.
-    """
-    import matplotlib.pyplot as plt
-    import numpy as np
+  def plot_proposals_distribution(self, n = 300, num_instances=100):
 
     # Collect the total number of proposals for each instance
     proposals = []
@@ -153,6 +140,87 @@ class Solution:
 
     plt.tight_layout()
     plt.savefig(f'proposals_distribution_n{n}.png')
-    plt.show()
 
     return proposals
+  
+    # Modify the run_da function to return ranks
+  def run_da2(self, n):
+      def generate_random_preferences(k):
+          doctors_preferences = [random.sample(range(k), k) for _ in range(k)]
+          hospital_preferences = [random.sample(range(k), k) for _ in range(k)]
+          return doctors_preferences, hospital_preferences
+
+      doct_pref, hosp_pref = generate_random_preferences(n)
+      preference_index = [0 for _ in range(n)]
+      hospitals_matched_doctor = [-1 for _ in range(n)]
+
+      matches = 0
+      proposal_count = 0
+      while matches < n:
+          for doctor in range(n):
+              if doctor in hospitals_matched_doctor:
+                  continue
+
+              hospital = doct_pref[doctor][preference_index[doctor]]
+              proposal_count += 1
+
+              if hospitals_matched_doctor[hospital] == -1:
+                  hospitals_matched_doctor[hospital] = doctor
+                  matches += 1
+              else:
+                  current_doctor = hospitals_matched_doctor[hospital]
+                  current_doctor_rank = hosp_pref[hospital].index(current_doctor)
+                  new_doctor_rank = hosp_pref[hospital].index(doctor)
+
+                  if new_doctor_rank < current_doctor_rank:
+                      hospitals_matched_doctor[hospital] = doctor
+                      preference_index[current_doctor] += 1
+                  else:
+                      preference_index[doctor] += 1
+
+      # Compute ranks of matches
+      doctor_ranks = [doct_pref[doctor].index(hospital) for hospital, doctor in enumerate(hospitals_matched_doctor)]
+      hospital_ranks = [hosp_pref[hospital].index(doctor) for hospital, doctor in enumerate(hospitals_matched_doctor)]
+
+      return proposal_count, doctor_ranks, hospital_ranks
+
+  # Question 3
+  def plot_average_ranks(self):
+
+    n_values = [10, 50, 100, 500, 1000]
+    num_runs = 5
+
+    avg_doctor_ranks = []
+    avg_hospital_ranks = []
+
+    for n in n_values:
+        total_doctor_ranks = 0
+        total_hospital_ranks = 0
+
+        for _ in range(num_runs):
+            _, doctor_ranks, hospital_ranks = self.run_da2(n)
+            total_doctor_ranks += sum(doctor_ranks) / n
+            total_hospital_ranks += sum(hospital_ranks) / n
+
+        avg_doctor_ranks.append(total_doctor_ranks / num_runs)
+        avg_hospital_ranks.append(total_hospital_ranks / num_runs)
+
+    # Plot the results
+    plt.figure(figsize=(10, 6))
+    plt.plot(n_values, avg_doctor_ranks, 'o-', label="Doctor's Average Rank")
+    plt.plot(n_values, avg_hospital_ranks, 'o-', label="Hospital's Average Rank")
+    plt.plot(n_values, np.log(n_values), '--', label='log(n) (Expected Doctor Rank)')
+    plt.plot(n_values, np.array(n_values) / np.log(n_values), '--', label='n/log(n) (Expected Hospital Rank)')
+
+    plt.title('Average Rank of Matches in DA Algorithm')
+    plt.xlabel('n = number of doctors/hospitals')
+    plt.ylabel('Average Rank')
+    plt.grid(True)
+    plt.legend()
+
+    plt.tight_layout()
+    plt.savefig('average_ranks_vs_n.png')
+    
+  
+
+    return avg_doctor_ranks, avg_hospital_ranks
